@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ash
 
 DAEMON=sshd
 
@@ -23,8 +23,13 @@ stop() {
     echo "Done."
 }
 
-trap stop SIGINT SIGTERM
-/usr/sbin/sshd -D -e &
-pid="$!"
-mkdir -p /var/run/${DAEMON} && echo "${pid}" > /var/run/${DAEMON}/${DAEMON}.pid
-wait "${pid}" && exit $?
+if [ "$(basename $1)" == "${DAEMON}" ]; then
+    echo "Running $@"
+    trap stop SIGINT SIGTERM
+    $@ &
+    pid="$!"
+    mkdir -p /var/run/${DAEMON} && echo "${pid}" > /var/run/${DAEMON}/${DAEMON}.pid
+    wait "${pid}" && exit $?
+else
+    exec "$@"
+fi
